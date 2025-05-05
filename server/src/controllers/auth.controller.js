@@ -95,7 +95,7 @@ export const logoutUser = asyncHandler(async (req, res) => {
       sameSite: "strict",
       secure: process.env.NODE_ENV !== "development",
     })
-    .json(new ApiResponse(200, null, "Logout Successful"));
+    .json(new ApiResponse(200, null, "User Logged Out Successful"));
 });
 
 export const getCurrentUser = asyncHandler(async (req, res) => {

@@ -4,6 +4,7 @@ import cors from "cors";
 import authRouter from "./routes/auth.routes.js";
 import healthcheckRouter from "./routes/healthcheck.routes.js";
 import { errorHandler } from "./utils/error-handler.js";
+import problemRouter from "./routes/problem.routes.js";
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use(
 
 app.use("/api/v1/healthcheck", healthcheckRouter);
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/problems", problemRouter);
 
 app.use(errorHandler);
 

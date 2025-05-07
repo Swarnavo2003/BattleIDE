@@ -52,21 +52,32 @@ export const createProblemValidator = () => {
       .notEmpty()
       .withMessage("Description is required")
       .isString()
-      .withMessage("Description must be a string")
-      .isIn(["EASY", "MEDIUM", "HARD"])
-      .withMessage("Difficulty must be EASY, MEDIUM or HARD"),
+      .withMessage("Description must be a string"),
     body("difficulty")
       .trim()
       .notEmpty()
       .withMessage("Difficulty is required")
-      .isString()
-      .withMessage("Difficulty must be a string"),
+      .isIn(["EASY", "MEDIUM", "HARD"])
+      .withMessage("Difficulty must be EASY, MEDIUM or HARD"),
     body("tags")
       .isArray({ min: 1 })
       .withMessage("Tags must be a non-empty array")
       .custom((arr) => arr.every((tag) => typeof tag === "string"))
-      .withMessage("Tags must be a string in array"),
-    body("examples").isObject().withMessage("Examples must be an object"),
+      .withMessage("All tags must be strings"),
+    body("examples")
+      .isObject()
+      .withMessage("Examples must be an object")
+      .custom((obj) =>
+        Object.values(obj).every(
+          (ex) =>
+            typeof ex.input === "string" &&
+            typeof ex.output === "string" &&
+            typeof ex.explanation === "string",
+        ),
+      )
+      .withMessage(
+        "Each example must have input, output, and explanation as strings",
+      ),
     body("constraints")
       .trim()
       .notEmpty()
@@ -76,13 +87,25 @@ export const createProblemValidator = () => {
     body("testcases")
       .isArray({ min: 1 })
       .withMessage("Testcases must be an array")
-      .custom((arr) => arr.every((tc) => tc.input && tc.output))
-      .withMessage("Each testcase must have input and output"),
+      .custom((arr) =>
+        arr.every(
+          (tc) => typeof tc.input === "string" && typeof tc.output === "string",
+        ),
+      )
+      .withMessage("Each testcase must have input and output as strings"),
     body("codeSnippets")
       .isObject()
-      .withMessage("Code snippets must be an object"),
-    body("referenceSolution")
+      .withMessage("Code snippets must be an object")
+      .custom((obj) =>
+        Object.values(obj).every((code) => typeof code === "string"),
+      )
+      .withMessage("Each code snippet must be a string"),
+    body("referenceSolutions")
       .isObject()
-      .withMessage("Reference solution must be an object"),
+      .withMessage("Reference solution must be an object")
+      .custom((obj) =>
+        Object.values(obj).every((code) => typeof code === "string"),
+      )
+      .withMessage("Each reference solution must be a string"),
   ];
 };

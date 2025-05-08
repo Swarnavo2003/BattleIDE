@@ -95,12 +95,140 @@ export const createProblem = asyncHandler(async (req, res) => {
     );
 });
 
-export const getAllProblems = asyncHandler((req, res) => {});
+export const getAllProblems = asyncHandler(async (req, res) => {
+  const problems = await db.problem.findMany();
 
-export const getProblemById = asyncHandler((req, res) => {});
+  if (!problems) {
+    throw new ApiError(404, "No problems found");
+  }
 
-export const updateProblem = asyncHandler((req, res) => {});
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, { problems }, "All Problems Fetched Successfully"),
+    );
+});
 
-export const deleteProblem = asyncHandler((req, res) => {});
+export const getProblemById = asyncHandler(async (req, res) => {
+  const problemId = req.params.id;
+
+  const problem = await db.problem.findUnique({
+    where: {
+      id: problemId,
+    },
+  });
+
+  if (!problem) {
+    throw new ApiError(404, `No problems with id ${problemId} found`);
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { problem }, "Problem Fetched Successfully"));
+});
+
+export const updateProblem = asyncHandler(async (req, res) => {
+  const userId = req.id;
+
+  const problemId = req.params.id;
+
+  const problem = await db.problem.findUnique({
+    where: {
+      id: problemId,
+      userId: userId,
+    },
+  });
+
+  if (!problem) {
+    throw new ApiError(404, `No problem with id ${problemId} found`);
+  }
+
+  const {
+    title,
+    description,
+    difficulty,
+    tags,
+    examples,
+    constraints,
+    testcases,
+    codeSnippets,
+    referenceSolutions,
+  } = req.body;
+
+  for (const [language, solutionCode] of Object.entries(referenceSolutions)) {
+    const languageId = getJudge0LanguageId(language);
+
+    if (!language) {
+      throw new ApiError(400, `Language ${language} not supported`);
+    }
+
+    const submissions = testcases.map(({ input, output }) => ({
+      source_code: solutionCode,
+      language_id: languageId,
+      stdin: input,
+      expected_output: output,
+    }));
+
+    const submissionResults = await submitBatch(submissions);
+
+    const tokens = submissionResults.map((res) => res.token);
+
+    const results = await pollBatchResults(tokens);
+
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+
+      if (result.status.id !== 3) {
+        throw new ApiError(
+          400,
+          `Tescase ${i + 1} failed for language ${language}`,
+        );
+      }
+    }
+  }
+
+  const updatedProblem = await db.problem.update({
+    where: { id: problemId },
+    data: {
+      title,
+      description,
+      difficulty,
+      tags,
+      examples,
+      constraints,
+      testcases,
+      codeSnippets,
+      referenceSolutions,
+    },
+  });
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { problem: updatedProblem },
+        "Problem Updated Successfully",
+      ),
+    );
+});
+
+export const deleteProblem = asyncHandler(async (req, res) => {
+  const problemId = req.params.id;
+
+  const problem = await db.problem.findUnique({
+    where: {
+      id: problemId,
+    },
+  });
+
+  if (!problem) {
+    throw new ApiError(404, `No problem with ${problemId} found`);
+  }
+
+  await db.problem.delete({ where: { id: problemId } });
+
+  return res.status(200).json(new ApiResponse(200, null, "Problem Deleted"));
+});
 
 export const getSolvedProblems = asyncHandler((req, res) => {});

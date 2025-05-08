@@ -26,9 +26,14 @@ problemRouter.get("/get-all-problems", authMiddleware, getAllProblems);
 
 problemRouter.get("/get-problem/:id", authMiddleware, getProblemById);
 
-problemRouter.put("update-problem/:id", authMiddleware, updateProblem);
+problemRouter.put(
+  "/update-problem/:id",
+  authMiddleware,
+  checkAdmin,
+  updateProblem,
+);
 
-problemRouter.delete("delete-problem/:id", authMiddleware, deleteProblem);
+problemRouter.delete("/delete-problem/:id", authMiddleware, deleteProblem);
 
 problemRouter.get("/get-solved-problem", authMiddleware, getSolvedProblems);
 

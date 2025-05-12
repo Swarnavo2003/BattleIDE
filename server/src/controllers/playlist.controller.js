@@ -8,13 +8,15 @@ export const createPlaylist = asyncHandler(async (req, res) => {
 
   const existingPlaylist = await db.playlist.findUnique({
     where: {
-      name,
-      userId,
+      name_userId: {
+        name,
+        userId,
+      },
     },
   });
 
   if (existingPlaylist) {
-    throw new ApiError(400, "Playlist already exists");
+    throw new ApiError(400, "Playlist with same name already exists");
   }
 
   const playlist = await db.playlist.create({
@@ -44,10 +46,6 @@ export const getAllPlaylistDetails = asyncHandler(async (req, res) => {
     },
   });
 
-  if (!playlists) {
-    throw new ApiError(404, `No playlist found`);
-  }
-
   return res
     .status(200)
     .json(new ApiResponse(200, { playlists }, "Playlist Fetched Successfully"));
@@ -56,7 +54,7 @@ export const getAllPlaylistDetails = asyncHandler(async (req, res) => {
 export const getPlaylistDetails = asyncHandler(async (req, res) => {
   const playlistId = req.params.id;
 
-  const playlist = await db.playlist.findUnique({
+  const playlist = await db.playlist.findFirst({
     where: {
       id: playlistId,
       userId: req.id,
@@ -83,7 +81,7 @@ export const addProblemToPlaylist = asyncHandler(async (req, res) => {
   const playlistId = req.params.id;
   const { problemIds } = req.body;
 
-  if (!Array.isArray(problemIds) || problemIds.length) {
+  if (!Array.isArray(problemIds) || problemIds.length === 0) {
     throw new ApiError(400, "Invalid problem ids");
   }
 
@@ -124,7 +122,7 @@ export const removeProblemFromPlaylist = asyncHandler(async (req, res) => {
   const playlistId = req.params.id;
   const { problemIds } = req.body;
 
-  if (!Array.isArray(problemIds) || problemIds.length) {
+  if (!Array.isArray(problemIds) || problemIds.length === 0) {
     throw new ApiError(400, "Invalid problem ids");
   }
 
@@ -137,8 +135,11 @@ export const removeProblemFromPlaylist = asyncHandler(async (req, res) => {
     },
   });
 
-  if (!problemsInPlaylist) {
-    throw new ApiError(404, `No playlist with id ${playlistId} found`);
+  if (problemsInPlaylist.count === 0) {
+    throw new ApiError(
+      404,
+      `No matching problems found in playlist ${playlistId}`,
+    );
   }
 
   return res

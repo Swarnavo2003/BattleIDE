@@ -109,3 +109,56 @@ export const createProblemValidator = () => {
       .withMessage("Each reference solution must be a string"),
   ];
 };
+
+export const executeCodeValidator = () => {
+  return [
+    body("source_code")
+      .isString()
+      .withMessage("source_code must be a string")
+      .notEmpty()
+      .withMessage("source_code cannot be empty"),
+    body("language_id").isInt().withMessage("language_id must be an integer"),
+    body("stdin")
+      .isArray({ min: 1 })
+      .withMessage("stdin must be a non-empty array"),
+    body("expected_outputs")
+      .isArray({ min: 1 })
+      .withMessage("expected_outputs must be a non-empty array"),
+    body("problemId")
+      .isString()
+      .withMessage("problemId must be a string")
+      .isUUID()
+      .withMessage("problemId must be a valid UUID"),
+  ];
+};
+
+export const createPlaylistValidator = () => {
+  return [
+    body("name")
+      .trim()
+      .notEmpty()
+      .withMessage("Playlist name is required")
+      .isLength({ max: 100 })
+      .withMessage("Playlist name must not exceed 100 characters"),
+    body("description")
+      .optional()
+      .isString()
+      .withMessage("Description must be a string"),
+  ];
+};
+
+export const addProblemToPlaylistValidator = () => {
+  return [
+    body("problemIds")
+      .isArray({ min: 1 })
+      .withMessage("problemIds must be a non-empty array"),
+  ];
+};
+
+export const removeProblemFromPlaylistValidator = () => {
+  return [
+    body("problemIds")
+      .isArray({ min: 1 })
+      .withMessage("problemIds must be a non-empty array"),
+  ];
+};
